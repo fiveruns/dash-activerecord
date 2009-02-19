@@ -28,7 +28,7 @@ class ActiverecordTest < Test::Unit::TestCase
     
     setup do
       ActiveRecord::Base.configurations = { 'test' => { 'database' => 'test', 'adapter' => 'mysql', 'user' => 'root', 'hostname' => 'localhost' }}
-      ActiveRecord::Base.establish_connection
+      ActiveRecord::Base.establish_connection('test')
       ActiveRecord::Base.connection.execute("create table if not exists test_models (id integer PRIMARY KEY, name varchar(32) not null)")
       ActiveRecord::Base.connection.execute("delete from test_models")
     end
@@ -88,7 +88,6 @@ class ActiverecordTest < Test::Unit::TestCase
 
   def mock_activerecord!
     require 'fiveruns/dash'
-    require 'fiveruns/dash/recipes/activerecord'
 
     eval <<-MOCK
       module Fiveruns::Dash
