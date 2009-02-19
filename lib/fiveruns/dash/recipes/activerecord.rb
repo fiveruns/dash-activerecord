@@ -1,41 +1,41 @@
-require 'fiveruns/dash'
+Fiveruns::Dash.register_recipe :activerecord, :url => 'http://dash.fiveruns.com' do |recipe|
 
-module Fiveruns::Dash
-  module Recipes
-    module ActiveRecord
+  recipe.time :db_time, 'Database Time', :methods => %w(ActiveRecord::ConnectionAdapters::AbstractAdapter#log)  
+  recipe.time :ar_time, 'ActiveRecord Time', :methods => Fiveruns::Dash::ActiveRecord::TARGETS,
+                                             :reentrant => true
+  recipe.added do |settings|
+
+    # We need a way to get the total time for a request/operation so that we can
+    # calculate the relative percentage used by AR/DB.    
+    if settings[:total_time]
       
-      def self.all_methods
-        methods_for_class.map { |m| "ActiveRecord::Base.#{m}" } + \
-        methods_for_instance.map { |m| "ActiveRecord::Base##{m}"}
+      total_time = settings[:total_time].to_s
+
+      Fiveruns::Dash.logger.debug "Set FiveRuns Dash `activerecord' :total_time setting to #{total_time}"
+      # Limit timing
+      recipe.metrics.each do |metric|
+        if %w(db_time ar_time).include?(metric.name) && metric.recipe.url == 'http://dash.fiveruns.com'
+          metric.options[:only_within] = total_time
+        end
       end
+
+      recipe.percentage :ar_util, 'ActiveRecord Utilization', :sources => ["ar_time", total_time] do |ar_time, all_time|
+        all_time == 0 ? 0 : (ar_time / all_time) * 100.0
+      end
+      recipe.percentage :db_util, 'Database Utilization', :sources => ["db_time", total_time] do |db_time, all_time|
+        all_time == 0 ? 0 : (db_time / all_time) * 100.0
+      end
+    
+    else
       
-      def self.methods_for_class
-        %w(find find_by_sql calculate create create! update_all destroy destroy_all delete delete_all)
-      end
-      
-      def self.methods_for_instance
-        %w(update save save! destroy)
-      end
+      Fiveruns::Dash.logger.error [
+        "Could not add some metrics from the FiveRuns Dash `activerecord' recipe to the configuration;",
+        "Please provide a :total_time metric name setting when adding the recipe.",
+        "For more information, see the fiveruns-dash-activerecord README"
+      ].join("\n")
       
     end
-  end
-end
-
-Fiveruns::Dash.register_recipe :activerecord, :url => 'http://dash.fiveruns.com' do |recipe|
-  
-  # We need a way to get the total time for a request/operation so that we can
-  # calculate the relative percentage used by AR/DB.  Default to "response_time" 
-  # but daemons can set this constant to provide their own total time metric.
-  total_time = recipe.options[:ar_total_time] ? recipe.options[:ar_total_time] : "response_time"
-
-  recipe.time :ar_time, 'ActiveRecord Time', :methods => Fiveruns::Dash::Recipes::ActiveRecord.all_methods, :reentrant => true, :only_within => total_time
-  recipe.time :db_time, 'Database Time', :methods => %w(ActiveRecord::ConnectionAdapters::AbstractAdapter#log), :only_within => total_time
-
-  recipe.percentage :ar_util, 'ActiveRecord Utilization', :sources => ["ar_time", total_time] do |ar_time, all_time|
-    all_time == 0 ? 0 : (ar_time / all_time) * 100.0
-  end
-  recipe.percentage :db_util, 'Database Utilization', :sources => ["db_time", total_time] do |db_time, all_time|
-    all_time == 0 ? 0 : (db_time / all_time) * 100.0
+    
   end
 
 end

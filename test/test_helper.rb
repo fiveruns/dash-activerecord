@@ -1,5 +1,5 @@
 $LOAD_PATH.unshift(File.dirname(__FILE__) << "/../lib")
-require 'fiveruns/dash/recipes/activerecord'
+require 'fiveruns/dash/activerecord'
 
 require 'test/unit'
 

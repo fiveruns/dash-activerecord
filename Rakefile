@@ -9,7 +9,7 @@ begin
     s.homepage = "http://github.com/fiveruns/dash-activerecord"
     s.description = "Provides an API to send metrics from applications using ActiveRecord to the FiveRuns Dash service"
     s.authors = ["FiveRuns Development Team"]
-    s.add_dependency 'fiveruns-dash-ruby', '>= 0.8.0'
+    s.add_dependency 'fiveruns-dash-ruby', '>= 0.8.1'
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"

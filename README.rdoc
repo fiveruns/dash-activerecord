@@ -9,10 +9,30 @@ You'll need a Dash account before using this library.
 This library is released as a gem from the official repository at http://github.com/fiveruns/dash-activerecord
 
   sudo gem install fiveruns-dash-activerecord --source http://gems.github.com
+  
+== Configuration
+
+Metrics in this recipe require a 'total_time' option be provided when the recipe is added; this option should indicate the metric to use when calculating % of utilization: 
+
+* For web applications, this is probably the total time of a request (ie, request_time)
+* For daemons, this is likely a processing cycle (eg, proc_time)
+
+Known issue: The metric name is not currently namespaced by recipe URL; although collision is unlikely, if your 'total_time' setting is for a metric that's present in more than one recipe, you may encounter problems.
+
+Note: The metric selected must be `marked', ie:
+
+  recipe.time :response_time, :method => 'Request#dispatch_action',
+                              :mark => true
+
+Example:
+
+  other_recipe.add_recipe :activerecord,
+                          :url => 'http://dash.fiveruns.com',
+                          :total_time => 'response_time'
 
 == Usage
 
-See the Dash Ruby support pages http://support.fiveruns.com/faqs/dash/ruby for information on how to use this library. 
+See the Dash Ruby support pages http://support.fiveruns.com/faqs/dash/ruby for more information on how to use this library. 
 
 == Authors
 

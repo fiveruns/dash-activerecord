@@ -1,5 +1,7 @@
 require File.dirname(__FILE__) << "/test_helper"
 
+Fiveruns::Dash.logger.level = Logger::FATAL
+
 class ActiverecordTest < Test::Unit::TestCase
 
   class TestModel < ActiveRecord::Base
@@ -76,19 +78,18 @@ class ActiverecordTest < Test::Unit::TestCase
     assert_equal 0, $?.exitstatus
   end
 
-  def metric(metric, data, in_ctx=[])
-    hsh = data.detect { |hsh| hsh[:name] == metric }
-    assert hsh, "No metric named #{metric} was found in metrics payload"
-    vals = hsh[:values]
+  def metric(metric, data, context=[])
+    hash = data.detect { |hash| hash[:name] == metric }
+    assert hash, "No metric named #{metric} was found in metrics payload"
+    vals = hash[:values]
     assert vals, "No values found for #{metric} in metrics payload"
-    val = vals.detect { |val| val[:context] == in_ctx }
-    assert val, "No value for #{metric} found for context #{in_ctx.inspect}"
+    val = vals.detect { |val| val[:context] == context }
+    assert val, "No value for #{metric} found for context #{context.inspect}"
     val[:value]
   end
 
   def mock_activerecord!
-    require 'fiveruns/dash'
-
+    
     eval <<-MOCK
       module Fiveruns::Dash
         class Reporter
@@ -100,13 +101,15 @@ class ActiverecordTest < Test::Unit::TestCase
     MOCK
 
     Fiveruns::Dash.register_recipe :tester, :url => 'http://dash.fiveruns.com' do |recipe|
-      recipe.time :test_time, 'Test Time', :method => 'ActiverecordTest::TestEngine#entry'
+      recipe.time :test_time, 'Test Time', :method => 'ActiverecordTest::TestEngine#entry',
+                                           :mark => true
     end
-    Fiveruns::Dash.configure :app => '666', :ar_total_time => 'test_time' do |config|
+    
+    Fiveruns::Dash.start :app => '666' do |config|
       config.add_recipe :ruby
-      config.add_recipe :activerecord
       config.add_recipe :tester
+      config.add_recipe :activerecord, :total_time => 'test_time'
     end
-    Fiveruns::Dash.session.start(true)
+    
   end
 end
