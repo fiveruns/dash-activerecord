@@ -11,7 +11,7 @@ Fiveruns::Dash.register_recipe :activerecord, :url => 'http://dash.fiveruns.com'
       
       total_time = settings[:total_time].to_s
 
-      Fiveruns::Dash.logger.debug "Set FiveRuns Dash `activerecord' :total_time setting to #{total_time}"
+      Fiveruns::Dash.logger.debug "Limiting FiveRuns Dash ActiveRecord metrics to within #{total_time}"
       # Limit timing
       recipe.metrics.each do |metric|
         if %w(db_time ar_time).include?(metric.name) && metric.recipe.url == 'http://dash.fiveruns.com'
